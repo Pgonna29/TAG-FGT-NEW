@@ -20,7 +20,7 @@
     <input type="date" id="delivery" placeholder="Delivery Date" required />
     <button type="submit">ดาวน์โหลด CSV</button>
   </form>
-  <button onclick="downloadPDF()">ดาวน์โหลด PDF</button>
+  <button id="pdfButton">ดาวน์โหลด PDF</button>
 
   <script>
     document.getElementById('dataForm').addEventListener('submit', function(e) {
@@ -31,31 +31,33 @@
       const delivery = document.getElementById('delivery').value;
 
       const csvContent = "LOT,PO,Production Date,Delivery Date\n" +
-                         `${lot},${po},${production},${delivery}`;
+                         lot + "," + po + "," + production + "," + delivery;
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = 'form_data.csv';
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     });
 
-    async function downloadPDF() {
+    document.getElementById('pdfButton').addEventListener('click', async function() {
       const lot = document.getElementById('lot').value;
       const po = document.getElementById('po').value;
       const production = document.getElementById('production').value;
       const delivery = document.getElementById('delivery').value;
 
-      const {{ jsPDF }} = window.jspdf;
+      const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       doc.setFontSize(14);
       doc.text("SNC CREATIVITY ANTHOLOGY COMPANY LIMITED", 10, 20);
       doc.setFontSize(12);
-      doc.text(`LOT: ${lot}`, 10, 40);
-      doc.text(`PO: ${po}`, 10, 50);
-      doc.text(`Production Date: ${production}`, 10, 60);
-      doc.text(`Delivery Date: ${delivery}`, 10, 70);
+      doc.text("LOT: " + lot, 10, 40);
+      doc.text("PO: " + po, 10, 50);
+      doc.text("Production Date: " + production, 10, 60);
+      doc.text("Delivery Date: " + delivery, 10, 70);
       doc.save("form_data.pdf");
-    }
+    });
   </script>
 </body>
 </html>
