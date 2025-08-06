@@ -1,57 +1,61 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Excel Form Export</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <title>Form to CSV and PDF</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body { font-family: sans-serif; padding: 1rem; max-width: 500px; margin: auto; }
     input, button { margin: 0.5rem 0; width: 100%; padding: 0.5rem; }
   </style>
 </head>
 <body>
-  <h2>กรอกข้อมูล Excel</h2>
+  <h2>บันทึกข้อมูล CSV และ PDF</h2>
   <form id="dataForm">
     <input type="text" id="lot" placeholder="LOT" required />
     <input type="text" id="po" placeholder="PO" required />
     <input type="date" id="production" placeholder="Production Date" required />
     <input type="date" id="delivery" placeholder="Delivery Date" required />
-    <button type="submit">บันทึกลง Excel</button>
+    <button type="submit">ดาวน์โหลด CSV</button>
   </form>
+  <button onclick="downloadPDF()">ดาวน์โหลด PDF</button>
 
   <script>
-    document.getElementById('dataForm').addEventListener('submit', async e => {
+    document.getElementById('dataForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const lot = document.getElementById('lot').value;
       const po = document.getElementById('po').value;
-      const prodDate = document.getElementById('production').value;
-      const delDate = document.getElementById('delivery').value;
+      const production = document.getElementById('production').value;
+      const delivery = document.getElementById('delivery').value;
 
-      const response = await fetch('template.xlsx');
-      const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-      const cells = Object.keys(sheet);
-      cells.forEach(cellAddr => {
-        const cell = sheet[cellAddr];
-        if (!cell || !cell.v) return;
-        if (typeof cell.v === 'string') {
-          if (cell.v.includes('LOT :')) cell.v = `LOT : ${lot}`;
-          if (cell.v.includes('PO :')) cell.v = `PO : ${po}`;
-          if (cell.v.includes('Production Date:')) cell.v = `Production Date: ${prodDate}`;
-          if (cell.v.includes('Delivery Date:')) cell.v = `Delivery Date: ${delDate}`;
-        }
-      });
-
-      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      const csvContent = "LOT,PO,Production Date,Delivery Date\n" +
+                         `${lot},${po},${production},${delivery}`;
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'exported_data.xlsx';
+      link.download = 'form_data.csv';
       link.click();
     });
+
+    async function downloadPDF() {
+      const lot = document.getElementById('lot').value;
+      const po = document.getElementById('po').value;
+      const production = document.getElementById('production').value;
+      const delivery = document.getElementById('delivery').value;
+
+      const {{ jsPDF }} = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(14);
+      doc.text("SNC CREATIVITY ANTHOLOGY COMPANY LIMITED", 10, 20);
+      doc.setFontSize(12);
+      doc.text(`LOT: ${lot}`, 10, 40);
+      doc.text(`PO: ${po}`, 10, 50);
+      doc.text(`Production Date: ${production}`, 10, 60);
+      doc.text(`Delivery Date: ${delivery}`, 10, 70);
+      doc.save("form_data.pdf");
+    }
   </script>
 </body>
 </html>
