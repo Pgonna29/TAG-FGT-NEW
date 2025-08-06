@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excel Form Export</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; max-width: 500px; margin: auto; }
+    input, button { margin: 0.5rem 0; width: 100%; padding: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h2>กรอกข้อมูล Excel</h2>
+  <form id="dataForm">
+    <input type="text" id="lot" placeholder="LOT" required />
+    <input type="text" id="po" placeholder="PO" required />
+    <input type="date" id="production" placeholder="Production Date" required />
+    <input type="date" id="delivery" placeholder="Delivery Date" required />
+    <button type="submit">บันทึกลง Excel</button>
+  </form>
+
+  <script>
+    document.getElementById('dataForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const lot = document.getElementById('lot').value;
+      const po = document.getElementById('po').value;
+      const prodDate = document.getElementById('production').value;
+      const delDate = document.getElementById('delivery').value;
+
+      const response = await fetch('template.xlsx');
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      const cells = Object.keys(sheet);
+      cells.forEach(cellAddr => {
+        const cell = sheet[cellAddr];
+        if (!cell || !cell.v) return;
+        if (typeof cell.v === 'string') {
+          if (cell.v.includes('LOT :')) cell.v = `LOT : ${lot}`;
+          if (cell.v.includes('PO :')) cell.v = `PO : ${po}`;
+          if (cell.v.includes('Production Date:')) cell.v = `Production Date: ${prodDate}`;
+          if (cell.v.includes('Delivery Date:')) cell.v = `Delivery Date: ${delDate}`;
+        }
+      });
+
+      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'exported_data.xlsx';
+      link.click();
+    });
+  </script>
+</body>
+</html>
