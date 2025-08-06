@@ -1,62 +1,80 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Form to CSV and PDF</title>
+  <title>Production Label Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 1rem; max-width: 500px; margin: auto; }
-    input, button { margin: 0.5rem 0; width: 100%; padding: 0.5rem; }
+    body { font-family: sans-serif; padding: 1rem; max-width: 600px; margin: auto; }
+    input, button { margin: 0.5rem 0; width: 100%; padding: 0.5rem; font-size: 1rem; }
+    label { font-weight: bold; margin-top: 1rem; display: block; }
   </style>
 </head>
 <body>
-  <h2>บันทึกข้อมูล CSV และ PDF</h2>
+  <h2>กรอกข้อมูลสำหรับฉลากสินค้า</h2>
   <form id="dataForm">
+    <label for="qty">Q'TY</label>
+    <input type="text" id="qty" placeholder="จำนวน" required />
+
+    <label for="lot">LOT</label>
     <input type="text" id="lot" placeholder="LOT" required />
+
+    <label for="po">PO</label>
     <input type="text" id="po" placeholder="PO" required />
-    <input type="date" id="production" placeholder="Production Date" required />
-    <input type="date" id="delivery" placeholder="Delivery Date" required />
+
+    <label for="date">วันที่ (ใช้ได้ทั้ง Production และ Delivery)</label>
+    <input type="date" id="date" required />
+
     <button type="submit">ดาวน์โหลด CSV</button>
   </form>
-  <button id="pdfButton">ดาวน์โหลด PDF</button>
+  <button id="pdfButton" type="button">ดาวน์โหลด PDF</button>
 
   <script>
     document.getElementById('dataForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      const lot = document.getElementById('lot').value;
-      const po = document.getElementById('po').value;
-      const production = document.getElementById('production').value;
-      const delivery = document.getElementById('delivery').value;
+      const qty = document.getElementById('qty').value.trim();
+      const lot = document.getElementById('lot').value.trim();
+      const po = document.getElementById('po').value.trim();
+      const date = document.getElementById('date').value;
 
-      const csvContent = "LOT,PO,Production Date,Delivery Date\n" +
-                         lot + "," + po + "," + production + "," + delivery;
+      if (!qty || !lot || !po || !date) {
+        alert("กรุณากรอกข้อมูลให้ครบทุกช่องก่อนดาวน์โหลด CSV");
+        return;
+      }
+
+      const csvContent = "QTY,LOT,PO,Production Date,Delivery Date\n" +
+                         qty + "," + lot + "," + po + "," + date + "," + date;
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'form_data.csv';
+      link.download = 'label_data.csv';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     });
 
     document.getElementById('pdfButton').addEventListener('click', async function() {
-      const lot = document.getElementById('lot').value;
-      const po = document.getElementById('po').value;
-      const production = document.getElementById('production').value;
-      const delivery = document.getElementById('delivery').value;
+      const qty = document.getElementById('qty').value.trim();
+      const lot = document.getElementById('lot').value.trim();
+      const po = document.getElementById('po').value.trim();
+      const date = document.getElementById('date').value;
+
+      if (!qty || !lot || !po || !date) {
+        alert("กรุณากรอกข้อมูลให้ครบทุกช่องก่อนดาวน์โหลด PDF");
+        return;
+      }
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      doc.setFontSize(14);
-      doc.text("SNC CREATIVITY ANTHOLOGY COMPANY LIMITED", 10, 20);
-      doc.setFontSize(12);
-      doc.text("LOT: " + lot, 10, 40);
-      doc.text("PO: " + po, 10, 50);
-      doc.text("Production Date: " + production, 10, 60);
-      doc.text("Delivery Date: " + delivery, 10, 70);
-      doc.save("form_data.pdf");
+      doc.setFontSize(16);
+      doc.text("Q'TY: " + qty + " PCS", 10, 20);
+      doc.text("LOT: " + lot, 10, 30);
+      doc.text("PO: " + po, 10, 40);
+      doc.text("Production Date: " + date, 10, 50);
+      doc.text("Delivery Date: " + date, 10, 60);
+
+      doc.save("label_data.pdf");
     });
   </script>
 </body>
